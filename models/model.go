@@ -25,14 +25,14 @@ type Job struct {
 	TimeElapsed        float64 `json:"time_elapsed" gorm:"-"`
 	TimeElapsedAverage float64 `json:"time_elapsed_average" gorm:"-"`
 
-	Tasks []Task `json:"tasks"`
+	Tasks []Task `json:"tasks" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 // Load это функция для загрузки задания с просчетом суммарного времени и среднего времени
 func (job *Job) Load() error {
 	// обработка ошибок
 	if err := db.First(job, "name = ?", job.Name).Error; err != nil {
-		return fmt.Errorf("when loading job from db: %v", err)
+		return err
 	}
 	if err := db.Find(&job.Tasks, "job_id = ?", job.ID).Error; err != nil {
 		return fmt.Errorf("when loading job from db: %v", err)
@@ -102,7 +102,7 @@ type Task struct {
 	TimeElapsedAverage float64 `json:"time_elapsed_average" gorm:"-"`
 
 	JobID int    `json:"-"`
-	Works []Work `json:"works"`
+	Works []Work `json:"works" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 // Work представляет Трудозатрату

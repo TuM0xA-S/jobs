@@ -141,24 +141,35 @@ func WorkCreate(w http.ResponseWriter, r *http.Request) {
 
 //WorkDelete deletes work
 func WorkDelete(w http.ResponseWriter, r *http.Request) {
-	// удаляем
-	if err := models.GetDB().Delete(&models.Work{}, "name = ?", mux.Vars(r)["work"]).Error; err == gorm.ErrRecordNotFound {
+	// сначала достаем
+	// а потом удаляем
+	// так делается чтобы можно было обработать ошибку когда удалять нечего
+	work := &models.Work{}
+	if err := models.GetDB().Take(work, "name = ?", mux.Vars(r)["work"]).Error; err == gorm.ErrRecordNotFound {
 		util.RespondWithError(w, 404, "no such work")
 		return
 	} else if err != nil {
 		panic(fmt.Errorf("when deleting work: %v", err))
 	}
 
+	if err := models.GetDB().Where(work).Delete(work).Error; err != nil {
+		panic(fmt.Errorf("when deleting work: %v", err))
+	}
 	util.RespondWithJSON(w, 200, util.ResponseBaseOK())
 }
 
 //TaskDelete deletes task
 func TaskDelete(w http.ResponseWriter, r *http.Request) {
 	// достаем и пробуем удалить таск
-	if err := models.GetDB().Delete(&models.Task{}, "name = ?", mux.Vars(r)["task"]).Error; err == gorm.ErrRecordNotFound {
+	task := &models.Task{}
+	if err := models.GetDB().Take(task, "name = ?", mux.Vars(r)["task"]).Error; err == gorm.ErrRecordNotFound {
 		util.RespondWithError(w, 404, "no such task")
 		return
 	} else if err != nil {
+		panic(fmt.Errorf("when deleting task: %v", err))
+	}
+
+	if err := models.GetDB().Where(task).Delete(task).Error; err != nil {
 		panic(fmt.Errorf("when deleting task: %v", err))
 	}
 
@@ -168,10 +179,15 @@ func TaskDelete(w http.ResponseWriter, r *http.Request) {
 //JobDelete deletes job
 func JobDelete(w http.ResponseWriter, r *http.Request) {
 	// аналогично
-	if err := models.GetDB().Delete(&models.Job{}, "name = ?", mux.Vars(r)["job"]).Error; err == gorm.ErrRecordNotFound {
+	job := &models.Job{}
+	if err := models.GetDB().Take(job, "name = ?", mux.Vars(r)["job"]).Error; err == gorm.ErrRecordNotFound {
 		util.RespondWithError(w, 404, "no such job")
 		return
 	} else if err != nil {
+		panic(fmt.Errorf("when deleting job: %v", err))
+	}
+
+	if err := models.GetDB().Where(job).Delete(job).Error; err != nil {
 		panic(fmt.Errorf("when deleting job: %v", err))
 	}
 
