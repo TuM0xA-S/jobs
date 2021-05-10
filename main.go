@@ -6,26 +6,39 @@ import (
 	"jobs/models"
 	"log"
 	"net/http"
+	"time"
 
-	. "jobs/config"
+	"jobs/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 func main() {
-	DBURI := fmt.Sprintf("root:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", Cfg.DBPassword, Cfg.DBHost, Cfg.DBName)
-	log.Println("db_uri:", DBURI)
-	conn, err := gorm.Open(mysql.Open(DBURI), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
+	// инициализируем базу
+	cfg := config.GetConfig()
+	dbURI := fmt.Sprintf("root:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", cfg.DBPassword, cfg.DBHost, cfg.DBName)
+	log.Println("db_uri:", dbURI)
+	conn, err := gorm.Open(mysql.Open(dbURI), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
 	if err != nil {
 		log.Fatal("when connecting to db:", err)
 	}
 	models.Init(conn)
+
+	// при запуске актуализируем схему базы
 	models.Migrate()
 
-	router := controllers.GetRouter()
+	// создаем сервер
+	server := &http.Server{
+		Handler: controllers.GetRouter(),
+		Addr:    cfg.Host,
+		// ставим таймауты чтобы запрос заканчивался если сервер завис
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
 
-	if err := http.ListenAndServe(Cfg.Host, router); err != nil {
+	// запускаем приложение
+	if server.ListenAndServe(); err != nil {
 		log.Printf("when serving: %v", err)
 	}
 }

@@ -1,28 +1,30 @@
 package config
 
+// тут конфиг
 import (
 	"log"
 
 	"github.com/caarlos0/env"
 )
 
-//Config ...
+//Config для сбора данных из переменных окружения
 type Config struct {
-	TokenPassword string `env:"TOKEN_PASSWORD" envDefault:"only_for_testing"`
-	Host          string `env:"HOST" envDefault:":8000"`
-	DBHost        string `env:"DB_HOST"`
-	DBName        string `env:"DB_NAME"`
-	DBPassword    string `env:"DB_PASSWORD"`
-	PerPage       int    `env:"PER_PAGE" envDefault:"10"`
-	BodyLength    int    `env:"BODY_LENGTH" envDefault:"1024"`
-	TitleLength   int    `env:"TITLE_LENGTH" envDefault:"40"`
+	Host       string `env:"HOST" envDefault:":8000"`
+	DBHost     string `env:"DB_HOST"`
+	DBName     string `env:"DB_NAME"`
+	DBPassword string `env:"DB_PASSWORD"`
 }
 
 //Cfg - parsed instance of Config
-var Cfg Config
+var cfg Config
 
+// парсим конфиг из переменных окружения, тк данные обычно так пробрасываются в контейнер
 func init() {
-	if err := env.Parse(&Cfg); err != nil {
+	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("when parsing env: %v", err)
 	}
+}
+
+func GetConfig() *Config {
+	return &cfg
 }

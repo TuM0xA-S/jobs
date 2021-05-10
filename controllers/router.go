@@ -10,6 +10,7 @@ import (
 	"github.com/urfave/negroni"
 )
 
+// это нужно чтобы сервер отвечал jsonом даже если падает
 //FormatPanicError just responds with json
 func (i InternalServerErrorResponder) FormatPanicError(rw http.ResponseWriter, _ *http.Request, _ *negroni.PanicInformation) {
 	util.RespondWithError(rw, 500, "server internal error")
@@ -17,6 +18,11 @@ func (i InternalServerErrorResponder) FormatPanicError(rw http.ResponseWriter, _
 
 //InternalServerErrorResponder [lol i hate suppressing that warning messages]
 type InternalServerErrorResponder struct{}
+
+// возвращает роутер
+// с миддлварью которая логирует
+// миддлварью которая рекаверит паники
+// и со всеми контроллерами зацепленными на урлы
 
 // GetRouter returns prepared router
 func GetRouter() http.Handler {
@@ -40,7 +46,7 @@ func GetRouter() http.Handler {
 	router.MethodNotAllowedHandler = http.HandlerFunc(MethodNotAllowed)
 
 	n := negroni.New()
-
+	// логгер можно было взять какой нибудь более продвинутый
 	logger := log.New(os.Stdout, "[jobs]", 0)
 
 	loggerMid := negroni.NewLogger()

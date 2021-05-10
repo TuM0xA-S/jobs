@@ -1,5 +1,7 @@
 package main
 
+// тут тесты, я их особо не буду комментировать
+
 import (
 	"bytes"
 	"encoding/json"
@@ -16,13 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func NoteBodyDataTest(title, body string) io.Reader {
-	return AsJSONBody(Object{
-		"title": title,
-		"body":  body,
-	})
-}
-
 type NotesTestSuite struct {
 	suite.Suite
 	ts *httptest.Server
@@ -37,6 +32,7 @@ func (n *NotesTestSuite) SetupSuite() {
 }
 
 func (n *NotesTestSuite) SetupTest() {
+	// создаем базу в памяти чтобы тесты быстро работали
 	conn, err := gorm.Open(sqlite.Open(":memory:"))
 	n.Require().Nil(err, "test db should work")
 
@@ -252,8 +248,8 @@ func (n *NotesTestSuite) TestMoveTask() {
 	n.Require().Equal("application/json", r.Header.Get("Content-Type"))
 
 	task := &models.Task{}
-	n.Require().Nil(models.GetDB().First(task, "name = job2"))
-	n.Require().True(task.JobID == anotherJob.ID) // check we move it to another jov
+	n.Require().Nil(models.GetDB().First(task, "name = ?", "task1").Error)
+	n.Require().True(task.JobID == anotherJob.ID) // check we move it to another job
 }
 
 func (n *NotesTestSuite) TestMoveWork() {
@@ -269,10 +265,10 @@ func (n *NotesTestSuite) TestMoveWork() {
 	n.Require().Equal("application/json", r.Header.Get("Content-Type"))
 
 	task := &models.Task{}
-	models.GetDB().First(task, "name = task2")
+	models.GetDB().First(task, "name = ?", "task2")
 
 	work := &models.Work{}
-	n.Require().Nil(models.GetDB().First(work, "name = work1"))
+	n.Require().Nil(models.GetDB().First(work, "name = ?", "work1").Error)
 	n.Require().True(work.TaskID == task.ID) // check we move it to another task
 }
 
